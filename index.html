@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Primary Bath — Before &amp; After</title>
+  <style>
+    :root {
+      --bg: #15171b; --panel: rgba(24, 26, 31, 0.82); --line: rgba(255,255,255,0.12);
+      --text: #eceae4; --muted: #a8a59c; --accent: #d9b66b;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 14px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+    canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    .panel { position: fixed; background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    #top { top: 14px; left: 14px; right: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; }
+    h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+    h1 small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; letter-spacing: 0; }
+    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+    button { font: inherit; color: var(--text); background: transparent; border: 0; padding: 7px 14px; cursor: pointer; }
+    button:hover { background: rgba(255,255,255,0.07); }
+    button.on { background: var(--accent); color: #1b1b1b; font-weight: 600; }
+    #views { bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; max-width: calc(100vw - 28px); overflow-x: auto; }
+    #views button { border-radius: 8px; white-space: nowrap; padding: 7px 12px; }
+    #opts { top: 76px; right: 14px; width: 232px; display: none; }
+    #opts.show { display: block; }
+    #opts h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+    label { display: block; margin: 8px 0 2px; color: var(--muted); font-size: 12px; }
+    select { width: 100%; background: #23262c; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; font: inherit; }
+    #note { left: 14px; bottom: 14px; max-width: 250px; font-size: 12px; color: var(--muted); padding: 8px 10px; }
+    #divider { position: fixed; top: 0; bottom: 0; width: 0; display: none; z-index: 5; }
+    #divider::before { content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 8px rgba(0,0,0,.5); }
+    #divider .knob { position: absolute; top: 50%; left: -19px; width: 38px; height: 38px; margin-top: -19px; border-radius: 50%; background: #fff; color: #222; display: grid; place-items: center; cursor: ew-resize; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,.5); user-select: none; touch-action: none; }
+    .tag { position: fixed; top: 80px; z-index: 4; display: none; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,.55); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    #tagL { left: 14px; } #tagR { right: 262px; }
+    #costBtn { border: 1px solid var(--line); border-radius: 9px; }
+    #cost { top: 76px; left: 14px; width: 360px; max-height: calc(100vh - 160px); overflow-y: auto; display: none; }
+    #cost.show { display: block; }
+    #cost h2 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+    #cost .total { font-size: 22px; font-weight: 600; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+    #cost .sub { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    #cost h3 { font-size: 12px; margin: 12px 0 4px; color: var(--accent); font-weight: 600; display: flex; justify-content: space-between; }
+    #cost table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    #cost td { padding: 3px 0; vertical-align: top; border-top: 1px solid var(--line); }
+    #cost td.n { text-align: right; white-space: nowrap; padding-left: 8px; font-variant-numeric: tabular-nums; }
+    #cost td small { display: block; color: var(--muted); }
+    #cost .fine { color: var(--muted); font-size: 11px; margin-top: 10px; }
+    @media (max-width: 720px) { #cost { width: auto; right: 14px; max-height: 55vh; } #opts { top: auto; bottom: 70px; right: 14px; left: 14px; width: auto; } #note { display: none; } }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="divider"><div class="knob">⇆</div></div>
+  <div class="tag" id="tagL">Existing</div><div class="tag" id="tagR">Remodel</div>
+
+  <div id="top" class="panel">
+    <h1>Primary Bath<small>Drag to orbit · scroll to zoom · right-drag to pan</small></h1>
+    <div style="display:flex;gap:8px;align-items:center">
+    <button id="costBtn">Cost estimate</button>
+    <div class="seg" id="mode">
+      <button data-mode="existing">Existing</button>
+      <button data-mode="compare">Compare</button>
+      <button data-mode="remodel">Remodel</button>
+    </div>
+    </div>
+  </div>
+
+  <div id="opts" class="panel">
+    <h2>Remodel finishes</h2>
+    <label>Wall color</label><select id="o-wall"></select>
+    <label>Floor</label><select id="o-floor"></select>
+    <label>Shower tile</label><select id="o-tile"></select>
+    <label>Shower</label><select id="o-shower"></select>
+    <label>Toilet</label><select id="o-toilet"></select>
+    <label>Tub</label><select id="o-tub"></select>
+    <label>Vanity finish</label><select id="o-vanity"></select>
+    <label>Vanity layout</label><select id="o-vstyle"></select>
+    <label>Fixtures &amp; hardware</label><select id="o-hardware"></select>
+  </div>
+
+  <div id="cost" class="panel">
+    <h2>Estimated remodel cost</h2>
+    <div class="total" id="costTotal"></div>
+    <div class="sub">For the options selected in Remodel finishes</div>
+    <label>Region</label><select id="o-region"></select>
+    <div id="costItems"></div>
+    <div class="fine">Installed costs, 2026 US averages from This Old House, Angi, Homewyse and Inch Calculator. Planning ranges only: get 2-3 local itemized quotes.</div>
+  </div>
+
+  <div id="views" class="panel"></div>
+  <div id="note" class="panel">Dimensions are estimated from photos. Adjust <code>DIM</code> in <code>src/helpers.js</code>.</div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
